@@ -40,27 +40,28 @@ def main(_):
   # MODEL
   X = tf.placeholder(tf.float32, [FLAGS.N, FLAGS.D])
   w = Normal(loc=tf.zeros(FLAGS.D), scale=3.0 * tf.ones(FLAGS.D))
-  b = Normal(loc=tf.zeros([]), scale=3.0 * tf.ones([]))
+  b = Normal(loc=tf.zeros([1]), scale=3.0 * tf.ones([1]))
   y = Bernoulli(logits=ed.dot(X, w) + b)
 
   # INFERENCE
-  qw = Empirical(params=tf.get_variable("qw/params", [FLAGS.T, FLAGS.D]))
-  qb = Empirical(params=tf.get_variable("qb/params", [FLAGS.T]))
+  # qw = Empirical(params=tf.get_variable("qw/params", [FLAGS.T, FLAGS.D]))
+  # qb = Empirical(params=tf.get_variable("qb/params", [FLAGS.T]))
 
-  inference = ed.HMC({w: qw, b: qb}, data={X: X_train, y: y_train})
-  inference.initialize(n_print=10, step_size=0.6)
+  # inference = ed.HMC({w: qw, b: qb}, data={X: X_train, y: y_train})
+  # inference.initialize(n_print=10, step_size=0.6)
 
   # Alternatively, use variational inference.
-  # qw_loc = tf.get_variable("qw_loc", [FLAGS.D])
-  # qw_scale = tf.nn.softplus(tf.get_variable("qw_scale", [FLAGS.D]))
-  # qb_loc = tf.get_variable("qb_loc", []) + 10.0
-  # qb_scale = tf.nn.softplus(tf.get_variable("qb_scale", []))
+  qw_loc = tf.get_variable("qw_loc", [FLAGS.D])
+  qw_scale = tf.nn.softplus(tf.get_variable("qw_scale", [FLAGS.D]))
+  qb_loc = tf.get_variable("qb_loc", [1]) + 10.0
+  qb_scale = tf.nn.softplus(tf.get_variable("qb_scale", [1]))
 
-  # qw = Normal(loc=qw_loc, scale=qw_scale)
-  # qb = Normal(loc=qb_loc, scale=qb_scale)
+  qw = Normal(loc=qw_loc, scale=qw_scale)
+  qb = Normal(loc=qb_loc, scale=qb_scale)
 
   # inference = ed.KLqp({w: qw, b: qb}, data={X: X_train, y: y_train})
-  # inference.initialize(n_print=10, n_iter=600)
+  inference = ed.Laplace({w: qw, b: qb}, data={X: X_train, y: y_train})
+  inference.initialize(n_print=10, n_iter=600)
 
   tf.global_variables_initializer().run()
 

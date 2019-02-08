@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from edward.models import Normal
+from edward.models import Bernoulli, Normal
 
 tf.flags.DEFINE_integer("N", default=50, help="Number of users.")
 tf.flags.DEFINE_integer("M", default=60, help="Number of movies.")
@@ -22,7 +22,7 @@ FLAGS = tf.flags.FLAGS
 
 def build_toy_dataset(U, V, N, M, noise_std=0.1):
   R = np.dot(np.transpose(U), V) + np.random.normal(0, noise_std, size=(N, M))
-  return R
+  return (R > 0).astype(int)
 
 
 def get_indicators(N, M, prob_std=0.5):
@@ -44,8 +44,9 @@ def main(_):
   I = tf.placeholder(tf.float32, [FLAGS.N, FLAGS.M])
   U = Normal(loc=0.0, scale=1.0, sample_shape=[FLAGS.D, FLAGS.N])
   V = Normal(loc=0.0, scale=1.0, sample_shape=[FLAGS.D, FLAGS.M])
-  R = Normal(loc=tf.matmul(tf.transpose(U), V) * I,
-             scale=tf.ones([FLAGS.N, FLAGS.M]))
+  # R = Normal(loc=tf.matmul(tf.transpose(U), V) * I,
+  #            scale=tf.ones([FLAGS.N, FLAGS.M]))
+  R = Bernoulli(logits=tf.matmul(tf.transpose(U), V) * I)
 
   # INFERENCE
   qU = Normal(loc=tf.get_variable("qU/loc", [FLAGS.D, FLAGS.N]),
@@ -68,7 +69,11 @@ def main(_):
   plt.imshow(R_true, cmap='hot')
   plt.show()
 
-  R_est = tf.matmul(tf.transpose(qU), qV).eval()
+  # R_est = tf.matmul(tf.transpose(qU), qV).eval()
+  R_est = Bernoulli(logits=tf.matmul(tf.transpose(qU), qV)).eval()
+  R_est2 = Bernoulli(logits=tf.matmul(tf.transpose(qU), qV)).mean()
+  print(R_est)
+  print(R_est2)
   plt.imshow(R_est, cmap='hot')
   plt.show()
 

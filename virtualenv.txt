@@ -1,0 +1,23 @@
+Goal: use notebooks within a virtualenv
+
+Following
+https://anbasile.github.io/programming/2017/06/25/jupyter-venv/
+and
+https://stackoverflow.com/questions/33496350/execute-python-script-within-jupyter-notebook-using-a-specific-virtualenv
+
+Within virtualenv:
+pip install jupyter
+pip install ipykernel
+
+(edward) Chelseas-MacBook-Pro% ipython kernel install --user --name=edward     
+Installed kernelspec edward in /Users/cyz/Library/Jupyter/kernels/edward
+# this will install the kernel system-wide. should probably namespace it
+# same if we do edward/bin/ipython kernel install --user --name=edward
+
+pip install tensorflow==1.6
+pip install keras
+pip install edward
+
+edward/bin/jupyter notebook
+
+Within notebook, select `edward` kernel.
